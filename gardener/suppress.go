@@ -1,4 +1,4 @@
-package shoot
+package gardener
 
 import (
 	"strings"

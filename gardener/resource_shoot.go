@@ -1,4 +1,4 @@
-package shoot
+package gardener
 
 import (
 	"fmt"
@@ -12,9 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/kyma-incubator/terraform-provider-gardener/client"
-	"github.com/kyma-incubator/terraform-provider-gardener/expand"
-	"github.com/kyma-incubator/terraform-provider-gardener/flatten"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,16 +41,28 @@ func ResourceShoot() *schema.Resource {
 			Delete: schema.DefaultTimeout(defaultDeleteTimeout),
 		},
 		Schema: map[string]*schema.Schema{
-			"metadata": namespacedMetadataSchema("shoot", false),
-			"spec":     shootSpecSchema(),
+			"metadata": &schema.Schema{
+				Type:        schema.TypeList,
+				Description: "Standard Shoot's metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
+				Required:    true,
+				MaxItems:    1,
+				Elem:        MetadataResource("shoot"),
+			},
+			"spec": &schema.Schema{
+				Type:        schema.TypeList,
+				Description: "ShootSpec is the specification of a Shoot. (see https://github.com/gardener/gardener/blob/master/pkg/apis/garden/v1beta1/types.go#L609)",
+				Required:    true,
+				MaxItems:    1,
+				Elem:        ShootResource(),
+			},
 		},
 	}
 }
 
 func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*client.Client)
-	metadata := expand.ExpandMetadata(d.Get("metadata").([]interface{}))
-	spec := expand.ExpandShoot(d.Get("spec").([]interface{}))
+	client := m.(*Client)
+	metadata := ExpandMetadata(d.Get("metadata").([]interface{}))
+	spec := ExpandShoot(d.Get("spec").([]interface{}))
 
 	mutex_key := fmt.Sprintf(`namespace-%s`, metadata.Namespace)
 	shootMutex.Lock(mutex_key)
@@ -74,7 +83,7 @@ func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
 		d.SetId("")
 		return err
 	}
-	d.SetId(flatten.BuildID(shoot.ObjectMeta))
+	d.SetId(BuildID(shoot.ObjectMeta))
 
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), waitForShootFunc(shootsClient, metadata.Name))
 	if err != nil {
@@ -85,8 +94,8 @@ func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServerRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*client.Client)
-	namespace, name, err := flatten.IdParts(d.Id())
+	client := m.(*Client)
+	namespace, name, err := IdParts(d.Id())
 	if err != nil {
 		return err
 	}
@@ -103,7 +112,7 @@ func resourceServerRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	spec, err := flatten.FlattenShoot(shoot.Spec, d)
+	spec, err := FlattenShoot(shoot.Spec, d)
 	if err != nil {
 		return err
 	}
@@ -116,8 +125,8 @@ func resourceServerRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*client.Client)
-	namespace, name, err := flatten.IdParts(d.Id())
+	client := m.(*Client)
+	namespace, name, err := IdParts(d.Id())
 	if err != nil {
 		return err
 	}
@@ -131,6 +140,7 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get shoot: %s", err)
 	}
+<<<<<<< HEAD:shoot/resource_shoot.go
 
 	newShoot := gardencorev1beta1.Shoot{
 		ObjectMeta: expand.ExpandMetadata(d.Get("metadata").([]interface{})),
@@ -157,8 +167,8 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*client.Client)
-	namespace, name, err := flatten.IdParts(d.Id())
+	client := m.(*Client)
+	namespace, name, err := IdParts(d.Id())
 	if err != nil {
 		return err
 	}
@@ -180,8 +190,8 @@ func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServerImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	client := m.(*client.Client)
-	namespace, name, err := flatten.IdParts(d.Id())
+	client := m.(*Client)
+	namespace, name, err := IdParts(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -201,14 +211,14 @@ func resourceServerImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	if err != nil {
 		return nil, err
 	}
-	d.SetId(flatten.BuildID(shoot.ObjectMeta))
+	d.SetId(BuildID(shoot.ObjectMeta))
 
 	return []*schema.ResourceData{d}, nil
 }
 
 func resourceServerExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	client := m.(*client.Client)
-	namespace, name, err := flatten.IdParts(d.Id())
+	client := m.(*Client)
+	namespace, name, err := IdParts(d.Id())
 	if err != nil {
 		return false, err
 	}

@@ -1,10 +1,8 @@
-package provider
+package gardener
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/kyma-incubator/terraform-provider-gardener/client"
-	"github.com/kyma-incubator/terraform-provider-gardener/shoot"
 )
 
 func Provider() terraform.ResourceProvider {
@@ -16,14 +14,14 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"gardener_shoot": shoot.ResourceShoot(),
+			"gardener_shoot": ResourceShoot(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
 }
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := &client.Config{
+	config := &Config{
 		KubeFile: d.Get("kube_file").(string),
 	}
-	return client.New(config)
+	return NewClient(config)
 }

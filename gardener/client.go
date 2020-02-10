@@ -1,4 +1,4 @@
-package client
+package gardener
 
 import (
 	gardener_apis "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
@@ -10,7 +10,7 @@ type Client struct {
 }
 
 // Client configures and returns a fully initialized GardenerClient
-func New(c *Config) (interface{}, error) {
+func NewClient(c *Config) (interface{}, error) {
 	kubeBytes := []byte(c.KubeFile)
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
 	if err != nil {

@@ -1,4 +1,4 @@
-package validate
+package gardener
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	utilValidation "k8s.io/apimachinery/pkg/util/validation"
 )
 
-func Annotations(value interface{}, key string) (ws []string, es []error) {
+func ValidateAnnotations(value interface{}, key string) (ws []string, es []error) {
 	m := value.(map[string]interface{})
 	for k := range m {
 		errors := utilValidation.IsQualifiedName(strings.ToLower(k))
@@ -21,7 +21,7 @@ func Annotations(value interface{}, key string) (ws []string, es []error) {
 	return
 }
 
-func Name(value interface{}, key string) (ws []string, es []error) {
+func ValidateName(value interface{}, key string) (ws []string, es []error) {
 	v := value.(string)
 	errors := apiValidation.NameIsDNSSubdomain(v, false)
 	if len(errors) > 0 {
@@ -32,7 +32,7 @@ func Name(value interface{}, key string) (ws []string, es []error) {
 	return
 }
 
-func GenerateName(value interface{}, key string) (ws []string, es []error) {
+func ValidateGenerateName(value interface{}, key string) (ws []string, es []error) {
 	v := value.(string)
 
 	errors := apiValidation.NameIsDNSLabel(v, true)
@@ -44,7 +44,7 @@ func GenerateName(value interface{}, key string) (ws []string, es []error) {
 	return
 }
 
-func Labels(value interface{}, key string) (ws []string, es []error) {
+func ValidateLabels(value interface{}, key string) (ws []string, es []error) {
 	m := value.(map[string]interface{})
 	for k, v := range m {
 		for _, msg := range utilValidation.IsQualifiedName(k) {
